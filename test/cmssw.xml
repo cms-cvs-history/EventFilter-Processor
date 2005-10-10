@@ -1,0 +1,30 @@
+<?xml version='1.0'?>
+<xc:Partition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xc="http://xdaq.web.cern.ch/xdaq/xsd/2004/XMLConfiguration-30">
+	
+	
+<xc:Context url="http://lxcmse2:40000">
+	<xc:Application class="Executive" id="0" network="local" resident="true">		 	
+		<properties xmlns="urn:xdaq-application:Executive" xsi:type="soapenc:Struct">
+                      <logLevel xsi:type="xsd:string">INFO</logLevel>
+                </properties>
+	</xc:Application>
+
+        <xc:Application class="evf::FUEventProcessor" id="21" instance="0" network="local">
+           <properties xmlns="urn:xdaq-application:FUEventProcessor" xsi:type="soapenc:Struct">
+
+                    <parameterSet xsi:type="xsd:string">
+		       process TEST1 = {
+		         path p = { dummyunpacker }
+			 source = DaqSource {string reader = "DaqFakeReader"
+			                     untracked int32 maxEvents=100000
+					     PSet pset = {untracked int32 dummy = 0}
+					     }
+			 module dummyunpacker = PoolOutputModule {
+			 string fileName = "ciccio.root"}				       } 
+                    </parameterSet>
+                  </properties>
+
+                </xc:Application>
+		<xc:Module>/data/meschi/cmssw/CMSSW_0_2_0_pre2/lib/slc3_ia32_gcc323/libEventFilterProcessor.so</xc:Module>
+        </xc:Context>
+</xc:Partition>
