@@ -19,7 +19,10 @@ int main(int argc, char* argv[])
   string config = "process TEST = {\n"
     "path p = { print }\n"
     "module print = AsciiOutputModule { }\n"
-    "source = EmptySource {untracked int32 maxEvents = 20}\n"
+    "source = DaqSource {string reader = \"DaqFakeReader\"\n" 
+    "untracked int32 maxEvents = 10000\n"
+    "PSet pset = {untracked int32 dummy= 0}\n" 
+    "}\n"
     "}";
   EventProcessor proc(0);
   proc.init(config);

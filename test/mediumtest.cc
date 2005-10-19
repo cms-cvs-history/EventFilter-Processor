@@ -21,13 +21,18 @@ int main(int argc, char* argv[])
   string config1 = "process TEST1 = {\n"
     "path p = { print }\n"
     "module print = AsciiOutputModule { }\n"
-    "source = EmptySource {untracked int32 maxEvents = 10000}\n"
+    "source = DaqSource {string reader = \"DaqFakeReader\"\n" 
+    "untracked int32 maxEvents = 1000\n"
+    "PSet pset = {untracked int32 dummy= 0}\n" 
+    "}\n"
     "}";
   string config2 = "process TEST2 = {\n"
     "path p = { print }\n"
     "module print = AsciiOutputModule { }\n"
-    "source = EmptySource {untracked int32 maxEvents = 100000\n"
-    "untracked uint32 firstRun = 100}\n"
+    "source = DaqSource {string reader = \"DaqFakeReader\"\n" 
+    "untracked int32 maxEvents = 1000\n"
+    "PSet pset = {untracked int32 dummy= 0}\n" 
+    "}\n"
     "}";
   EventProcessor *proc = new EventProcessor(0);
   TaskGroup *group = new TaskGroup(); //ownership goes to task
@@ -50,7 +55,7 @@ int main(int argc, char* argv[])
   cout << "activate processor thread and wait 2s before killing" << endl;
   proc->activate();
   //  proc.run();
-  ::sleep(2);
+  ::sleep(1);
   cout << " call endRun " << endl;
   proc->endRun();
   group->join(); //wait for eventprocessor thread to exit
