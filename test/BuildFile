@@ -6,9 +6,7 @@
 </library> 
 <bin name=simpleFPtest file=simpletest.cc>
 <use name=EventFilter/Processor>
-<lib name=FWCoreServiceRegistryTestDummyService>	
 </bin>
 <bin name=mediumFPtest file=mediumtest.cc>
 <use name=EventFilter/Processor>
-<lib name=FWCoreServiceRegistryTestDummyService>	
 </bin>
