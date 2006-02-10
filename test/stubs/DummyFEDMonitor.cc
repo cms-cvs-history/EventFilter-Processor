@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date$
- * $Revision$
+ * $Date: 2005/10/20 11:47:17 $
+ * $Revision: 1.1 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -33,6 +33,8 @@ namespace test{
     unsigned int count_;
     MonitorElement * hfedsize;
     MonitorElement * hfedprof;
+    MonitorElement * hfedcacca;
+
   public:
 
     DummyFEDMonitor(const ParameterSet& pset):count_(0)
@@ -44,13 +46,25 @@ namespace test{
       hfedprof = dbe->bookProfile("fedprof","FED Size by ID", 2048,0.,2048.,
 				  0,0.,5000.);
     }
- 
+    void beginJob(EventSetup const&es)
+    {
+      cout << "Ciao bello !!!!!!!!" << endl;
+    }
+
     void analyze(const Event & e, const EventSetup& c){
       
       ++count_;
 
+      if(count_==1345)
+	{
+	  DaqMonitorBEInterface *dbe = 
+	    edm::Service<DaqMonitorBEInterface>().operator->();
+
+	  dbe->setCurrentFolder("cacca");
+	  hfedcacca = dbe->book1D("fedcacca","FED Size Distribution",100,0.,10000.);
+	}
       Handle<FEDRawDataCollection> rawdata;
-      e.getByLabel("DaqRawData", rawdata);
+      e.getByLabel("DaqSource", rawdata);
       for (int i = 0; i<FEDNumbering::lastFEDId(); i++){
 	const FEDRawData& data = rawdata->FEDData(i);
 	if(size_t size=data.size()) {
