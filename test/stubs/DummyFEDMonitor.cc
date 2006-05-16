@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2005/10/20 11:47:17 $
- * $Revision: 1.1 $
+ * $Date: 2006/02/10 10:20:00 $
+ * $Revision: 1.2 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -34,6 +34,7 @@ namespace test{
     MonitorElement * hfedsize;
     MonitorElement * hfedprof;
     MonitorElement * hfedcacca;
+    MonitorElement ** hindfed;
 
   public:
 
@@ -41,28 +42,22 @@ namespace test{
     {
       DaqMonitorBEInterface *dbe = 
 	edm::Service<DaqMonitorBEInterface>().operator->();
-      dbe->setCurrentFolder("FEDs");
+      dbe->setCurrentFolder("FEDs/Summary");
       hfedsize = dbe->book1D("fedsize","FED Size Distribution",100,0.,10000.);
       hfedprof = dbe->bookProfile("fedprof","FED Size by ID", 2048,0.,2048.,
 				  0,0.,5000.);
+      hindfed = new MonitorElement*[FEDNumbering::lastFEDId()];
     }
     void beginJob(EventSetup const&es)
     {
-      cout << "Ciao bello !!!!!!!!" << endl;
+      for(unsigned int i =0; i<FEDNumbering::lastFEDId(); i++)
+	hindfed[i] = 0;
     }
 
     void analyze(const Event & e, const EventSetup& c){
       
       ++count_;
 
-      if(count_==1345)
-	{
-	  DaqMonitorBEInterface *dbe = 
-	    edm::Service<DaqMonitorBEInterface>().operator->();
-
-	  dbe->setCurrentFolder("cacca");
-	  hfedcacca = dbe->book1D("fedcacca","FED Size Distribution",100,0.,10000.);
-	}
       Handle<FEDRawDataCollection> rawdata;
       e.getByLabel("DaqSource", rawdata);
       for (int i = 0; i<FEDNumbering::lastFEDId(); i++){
@@ -70,6 +65,24 @@ namespace test{
 	if(size_t size=data.size()) {
 	  hfedsize->Fill(float(size));
 	  hfedprof->Fill(float(i),float(size));
+	  if(i<1024)
+	    {
+	      if(hindfed[i]==0)
+		{
+		  DaqMonitorBEInterface *dbe = 
+		    edm::Service<DaqMonitorBEInterface>().operator->();
+		  dbe->lock();
+		  dbe->setCurrentFolder("FEDs/Details");
+		  ostringstream os1;
+		  ostringstream os2;
+		  os1 << "fed" << i;
+		  os2 << "FED #" << i << " Size Distribution";
+		  hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,10000.);
+		  dbe->unlock();
+		}
+	      hindfed[i]->Fill(float(size));
+	      
+	    }
 	}
       }
 //       if ( count_==1) {
