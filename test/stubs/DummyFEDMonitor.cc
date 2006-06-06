@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/02/10 10:20:00 $
- * $Revision: 1.2 $
+ * $Date: 2006/05/16 14:52:18 $
+ * $Revision: 1.3 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -71,14 +71,12 @@ namespace test{
 		{
 		  DaqMonitorBEInterface *dbe = 
 		    edm::Service<DaqMonitorBEInterface>().operator->();
-		  dbe->lock();
 		  dbe->setCurrentFolder("FEDs/Details");
 		  ostringstream os1;
 		  ostringstream os2;
 		  os1 << "fed" << i;
 		  os2 << "FED #" << i << " Size Distribution";
 		  hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,10000.);
-		  dbe->unlock();
 		}
 	      hindfed[i]->Fill(float(size));
 	      
