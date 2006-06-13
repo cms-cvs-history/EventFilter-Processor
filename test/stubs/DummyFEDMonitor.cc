@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/05/16 14:52:18 $
- * $Revision: 1.3 $
+ * $Date: 2006/06/06 09:51:29 $
+ * $Revision: 1.4 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -33,60 +33,92 @@ namespace test{
     unsigned int count_;
     MonitorElement * hfedsize;
     MonitorElement * hfedprof;
-    MonitorElement * hfedcacca;
     MonitorElement ** hindfed;
+    bool dqm;
 
   public:
 
-    DummyFEDMonitor(const ParameterSet& pset):count_(0)
+    DummyFEDMonitor(const ParameterSet& pset):count_(0), dqm(true)
     {
-      DaqMonitorBEInterface *dbe = 
-	edm::Service<DaqMonitorBEInterface>().operator->();
-      dbe->setCurrentFolder("FEDs/Summary");
-      hfedsize = dbe->book1D("fedsize","FED Size Distribution",100,0.,10000.);
-      hfedprof = dbe->bookProfile("fedprof","FED Size by ID", 2048,0.,2048.,
-				  0,0.,5000.);
-      hindfed = new MonitorElement*[FEDNumbering::lastFEDId()];
+      DaqMonitorBEInterface *dbe = 0;
+      try{
+	dbe = edm::Service<DaqMonitorBEInterface>().operator->();
+	dbe->setCurrentFolder("FEDs/Summary");
+	hfedsize = dbe->book1D("fedsize","FED Size Distribution",100,0.,10000.);
+	//	if(hfedsize == 0) dbe->findObject("fedsize");
+	hfedprof = dbe->bookProfile("fedprof","FED Size by ID", 2048,0.,2048.,
+				    0,0.,5000.);
+	//	if(hfedprof == 0) dbe->findObject("fedprof");
+	hindfed = new MonitorElement*[FEDNumbering::lastFEDId()];
+
+      }
+      catch(cms::Exception &e)
+	{
+	  dqm = false;
+	  // do nothing, it means dqm is not available
+	}
     }
     void beginJob(EventSetup const&es)
     {
       for(unsigned int i =0; i<FEDNumbering::lastFEDId(); i++)
 	hindfed[i] = 0;
     }
+    void endJob()
+    {
 
+      DaqMonitorBEInterface *dbe = 0;
+      
+      try{
+	dbe = edm::Service<DaqMonitorBEInterface>().operator->();
+	dbe->setCurrentFolder("FEDs/Summary");
+	dbe->removeContents();
+	dbe->setCurrentFolder("FEDs/Details");
+	dbe->removeContents();
+      }
+      catch(cms::Exception &e)
+	{
+	  dqm = false;
+	  // do nothing, it means dqm is not available
+	}
+
+      delete [] hindfed;
+    }
     void analyze(const Event & e, const EventSetup& c){
       
       ++count_;
-
-      Handle<FEDRawDataCollection> rawdata;
-      e.getByLabel("DaqSource", rawdata);
-      for (int i = 0; i<FEDNumbering::lastFEDId(); i++){
-	const FEDRawData& data = rawdata->FEDData(i);
-	if(size_t size=data.size()) {
-	  hfedsize->Fill(float(size));
-	  hfedprof->Fill(float(i),float(size));
-	  if(i<1024)
-	    {
-	      if(hindfed[i]==0)
+      if(dqm)
+	{
+	  Handle<FEDRawDataCollection> rawdata;
+	  e.getByLabel("DaqSource", rawdata);
+	  for (int i = 0; i<FEDNumbering::lastFEDId(); i++){
+	    const FEDRawData& data = rawdata->FEDData(i);
+	    if(size_t size=data.size()) {
+	      hfedsize->Fill(float(size));
+	      hfedprof->Fill(float(i),float(size));
+	      if(i<1024)
 		{
-		  DaqMonitorBEInterface *dbe = 
-		    edm::Service<DaqMonitorBEInterface>().operator->();
-		  dbe->setCurrentFolder("FEDs/Details");
-		  ostringstream os1;
-		  ostringstream os2;
-		  os1 << "fed" << i;
-		  os2 << "FED #" << i << " Size Distribution";
-		  hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,10000.);
+		  if(hindfed[i]==0)
+		    {
+		      DaqMonitorBEInterface *dbe = 
+			edm::Service<DaqMonitorBEInterface>().operator->();
+		      dbe->setCurrentFolder("FEDs/Details");
+		      ostringstream os1;
+		      ostringstream os2;
+		      os1 << "fed" << i;
+		      os2 << "FED #" << i << " Size Distribution";
+		      hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,10000.);
+		      //		      if(hindfed[i] == 0) dbe->findObject(os1.str());
+		    }
+		  hindfed[i]->Fill(float(size));
+		  
 		}
-	      hindfed[i]->Fill(float(size));
-	      
 	    }
-	}
-      }
+	  }
 //       if ( count_==1) {
 // 	   CPPUNIT_ASSERT( rawdata->FEDData(619).size()==5560);
 //         CPPUNIT_ASSERT( rawdata->FEDData(620).size()==5544);     
 //       }  
+	}
     }
   };
 DEFINE_FWK_MODULE(DummyFEDMonitor)
