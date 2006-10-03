@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/06/13 14:49:46 $
- * $Revision: 1.5 $
+ * $Date: 2006/06/27 11:28:33 $
+ * $Revision: 1.6 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -106,7 +106,8 @@ namespace test{
 		      ostringstream os2;
 		      os1 << "fed" << i;
 		      os2 << "FED #" << i << " Size Distribution";
-		      hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,10000.);
+		      hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,3.*size);
+
 		      //		      if(hindfed[i] == 0) dbe->findObject(os1.str());
 		    }
 		  hindfed[i]->Fill(float(size));
