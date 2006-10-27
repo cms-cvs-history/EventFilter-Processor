@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/06/27 11:28:33 $
- * $Revision: 1.6 $
+ * $Date: 2006/10/03 10:40:23 $
+ * $Revision: 1.7 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -122,6 +122,6 @@ namespace test{
 	}
     }
   };
-DEFINE_FWK_MODULE(DummyFEDMonitor)
+DEFINE_FWK_MODULE(DummyFEDMonitor);
 }
 
