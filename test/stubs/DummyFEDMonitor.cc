@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/10/03 10:40:23 $
- * $Revision: 1.7 $
+ * $Date: 2006/10/27 01:35:26 $
+ * $Revision: 1.8 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -60,7 +60,7 @@ namespace test{
     }
     void beginJob(EventSetup const&es)
     {
-      for(unsigned int i =0; i<FEDNumbering::lastFEDId(); i++)
+      for(int i = 0; i<FEDNumbering::lastFEDId(); i++)
 	hindfed[i] = 0;
     }
     void endJob()
