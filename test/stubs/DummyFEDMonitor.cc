@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/10/27 01:35:26 $
- * $Revision: 1.8 $
+ * $Date: 2006/11/14 10:30:47 $
+ * $Revision: 1.9 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -22,12 +22,10 @@
 
 #include <iostream>
 
-using namespace edm;
-using namespace std;
 
 namespace test{
 
-  class DummyFEDMonitor: public EDAnalyzer{
+  class DummyFEDMonitor: public edm::EDAnalyzer{
   
   private:
     unsigned int count_;
@@ -38,7 +36,7 @@ namespace test{
 
   public:
 
-    DummyFEDMonitor(const ParameterSet& pset):count_(0), dqm(true)
+    DummyFEDMonitor(const edm::ParameterSet& pset):count_(0), dqm(true)
     {
       DaqMonitorBEInterface *dbe = 0;
       try{
@@ -58,7 +56,7 @@ namespace test{
 	  // do nothing, it means dqm is not available
 	}
     }
-    void beginJob(EventSetup const&es)
+    void beginJob(edm::EventSetup const&es)
     {
       for(int i = 0; i<FEDNumbering::lastFEDId(); i++)
 	hindfed[i] = 0;
@@ -83,12 +81,12 @@ namespace test{
 
       delete [] hindfed;
     }
-    void analyze(const Event & e, const EventSetup& c){
+    void analyze(const edm::Event & e, const edm::EventSetup& c){
       
       ++count_;
       if(dqm)
 	{
-	  Handle<FEDRawDataCollection> rawdata;
+	  edm::Handle<FEDRawDataCollection> rawdata;
 	  e.getByType(rawdata);
 	  for (int i = 0; i<FEDNumbering::lastFEDId(); i++){
 	    const FEDRawData& data = rawdata->FEDData(i);
@@ -102,8 +100,8 @@ namespace test{
 		      DaqMonitorBEInterface *dbe = 
 			edm::Service<DaqMonitorBEInterface>().operator->();
 		      dbe->setCurrentFolder("FEDs/Details");
-		      ostringstream os1;
-		      ostringstream os2;
+		      std::ostringstream os1;
+		      std::ostringstream os2;
 		      os1 << "fed" << i;
 		      os2 << "FED #" << i << " Size Distribution";
 		      hindfed[i] = dbe->book1D(os1.str(),os2.str(),100,0.,3.*size);
