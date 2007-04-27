@@ -11,6 +11,8 @@
 #include "EventFilter/Utilities/interface/ParameterSetRetriever.h"
 #include "EventFilter/Utilities/interface/MicroStateService.h"
 #include "EventFilter/Message2log4cplus/interface/MLlog4cplus.h"
+#include "EventFilter/Modules/interface/FUShmDQMOutputService.h"
+
 
 #include "FWCore/Framework/interface/EventProcessor.h"
 #include "FWCore/Framework/interface/RawInputSource.h"
@@ -397,7 +399,8 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
     
     // if the ep is intialized already, the initialization will be skipped
     initEventProcessor();
-    
+    attachDqmToShm();
+
     int sc = 0;
     evtProcessor_->setRunNumber(runNumber_.value_);
     try {
@@ -452,6 +455,7 @@ bool FUEventProcessor::stopping(toolbox::task::WorkLoop* wl)
       fsm_.fireEvent("StopDone",this);
     else
       fsm_.fireFailed("EventProcessor stop timed out",this);
+    detachDqmFromShm();
   }
   catch (xcept::Exception &e) {
     string msg = "stopping FAILED: " + (string)e.what();
@@ -470,6 +474,7 @@ bool FUEventProcessor::halting(toolbox::task::WorkLoop* wl)
     edm::EventProcessor::StatusCode rc = stopEventProcessor();
     if(rc != edm::EventProcessor::epTimedOut)
       {
+	detachDqmFromShm();
 	evtProcessor_->endJob();
 	delete evtProcessor_;
 	evtProcessor_ = 0;
@@ -1278,6 +1283,42 @@ void FUEventProcessor::microState(xgi::Input  *in, xgi::Output *out)
   *out << "<br>  " << micro1 << endl;
   *out << "<br>  " << micro2 << endl;
 }
+
+
+void FUEventProcessor::attachDqmToShm() throw (evf::Exception)  
+{
+  string errmsg;
+  bool success = false;
+  try {
+    edm::ServiceRegistry::Operate operate(evtProcessor_->getToken());
+    if(edm::Service<FUShmDQMOutputService>().isAvailable())
+      success = edm::Service<FUShmDQMOutputService>()->attachToShm();
+    if (!success) errmsg = "Failed to attach DQM service to shared memory";
+  }
+  catch (cms::Exception& e) {
+    errmsg = "Failed to attach DQM service to shared memory: " + (string)e.what();
+  }
+  if (!errmsg.empty()) XCEPT_RAISE(evf::Exception,errmsg);
+}
+
+
+
+void FUEventProcessor::detachDqmFromShm() throw (evf::Exception)
+{
+  string errmsg;
+  bool success = false;
+  try {
+    edm::ServiceRegistry::Operate operate(evtProcessor_->getToken());
+    if(edm::Service<FUShmDQMOutputService>().isAvailable())
+      success = edm::Service<FUShmDQMOutputService>()->detachFromShm();
+    if (!success) errmsg = "Failed to detach DQM service from shared memory";
+  }
+  catch (cms::Exception& e) {
+    errmsg = "Failed to detach DQM service from shared memory: " + (string)e.what();
+  }
+  if (!errmsg.empty()) XCEPT_RAISE(evf::Exception,errmsg);
+}
+
 
 
 XDAQ_INSTANTIATOR_IMPL(evf::FUEventProcessor)

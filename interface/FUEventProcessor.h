@@ -5,6 +5,8 @@
 #include "EventFilter/Utilities/interface/StateMachine.h"
 #include "EventFilter/Utilities/interface/RunBase.h"
 #include "EventFilter/Utilities/interface/Css.h"
+#include "EventFilter/Utilities/interface/Exception.h"
+
 
 #include "FWCore/Framework/interface/TriggerReport.h"
 #include "FWCore/Modules/src/PrescaleService.h"
@@ -97,7 +99,9 @@ namespace evf
     {
       css_.css(in,out);
     }
-    
+    void attachDqmToShm()   throw (evf::Exception);
+    void detachDqmFromShm() throw (evf::Exception);
+
     
   private:
     //
