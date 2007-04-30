@@ -469,13 +469,15 @@ bool FUEventProcessor::stopping(toolbox::task::WorkLoop* wl)
 //______________________________________________________________________________
 bool FUEventProcessor::halting(toolbox::task::WorkLoop* wl)
 {
+  edm::event_processor::State st = evtProcessor_->getState();
   try {
     LOG4CPLUS_INFO(getApplicationLogger(),"Start halting ...");
     edm::EventProcessor::StatusCode rc = stopEventProcessor();
     if(rc != edm::EventProcessor::epTimedOut)
       {
 	detachDqmFromShm();
-	evtProcessor_->endJob();
+	if(st == edm::event_processor::sJobReady || st == edm::event_processor::sDone)
+	  evtProcessor_->endJob();
 	delete evtProcessor_;
 	evtProcessor_ = 0;
 	epInitialized_ = false;
@@ -694,7 +696,15 @@ void FUEventProcessor::initEventProcessor()
 //______________________________________________________________________________
 edm::EventProcessor::StatusCode FUEventProcessor::stopEventProcessor()
 {
+  edm::event_processor::State st = evtProcessor_->getState();
+
+  LOG4CPLUS_INFO(getApplicationLogger(),"FUEventProcessor::stopEventProcessor. state "
+               << evtProcessor_->stateName(st));
+
   edm::EventProcessor::StatusCode rc = edm::EventProcessor::epSuccess;
+
+  if(st == edm::event_processor::sInit) return rc;
+
   try  {
     rc = evtProcessor_->waitTillDoneAsync(timeoutOnStop_.value_);
   }
