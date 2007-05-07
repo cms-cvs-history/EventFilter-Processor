@@ -1009,7 +1009,7 @@ void FUEventProcessor::defaultWebPage(xgi::Input  *in, xgi::Output *out)
        << getApplicationDescriptor()->getInstance()                  << endl;
   *out << "      " << fsm_.stateName()->toString()                   << endl;
   *out << "<p>version "
-       << $Tag$
+       << $Tag:
        << "</p>"                                                     << endl;
   *out << "      " << fsm_.stateName()->toString()                   << endl;
   *out << "    </b>"                                                 << endl;
