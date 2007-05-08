@@ -1008,10 +1008,6 @@ void FUEventProcessor::defaultWebPage(xgi::Input  *in, xgi::Output *out)
   *out << getApplicationDescriptor()->getClassName() 
        << getApplicationDescriptor()->getInstance()                  << endl;
   *out << "      " << fsm_.stateName()->toString()                   << endl;
-  *out << "<p>version "
-       << $Tag:
-       << "</p>"                                                     << endl;
-  *out << "      " << fsm_.stateName()->toString()                   << endl;
   *out << "    </b>"                                                 << endl;
   *out << "  </td>"                                                  << endl;
   *out << "  <td width=\"32\">"                                      << endl;
@@ -1146,173 +1142,142 @@ void FUEventProcessor::taskWebPage(xgi::Input *in, xgi::Output *out,const string
       mwr = edm::Service<ModuleWebRegistry>().operator->();
   }
   catch(...) {
-    cout<<"exception when trying to get the service registry " << endl;
+    cout<<"exception when trying to get the service registry "		<< endl;
   }
-  *out << "<tr valign=\"top\">"                                      << endl;
-  *out << "<td>"                                                     << endl;
-  *out << "<table frame=\"void\" rules=\"groups\" class=\"states\">" << endl;
-  *out << "<colgroup> <colgroup align=\"rigth\">"                    << endl;
-  *out << "  <tr>"                                                   << endl;
-  *out << "    <th colspan=2>"                                       << endl;
-  *out << "      " << "Status"                                       << endl;
-  *out << "    </th>"                                                << endl;
-  *out << "  </tr>"                                                  << endl;
-  
-  *out << "<tr>" << endl;
-  *out << "<th >" << endl;
-  *out << "Parameter" << endl;
-  *out << "</th>" << endl;
-  *out << "<th>" << endl;
-  *out << "Value" << endl;
-  *out << "</th>" << endl;
-  *out << "</tr>" << endl;
-  *out << "<tr>" << endl;
-  *out << "<td >" << endl;
-  *out << "EP state" << endl;
-  *out << "</td>" << endl;
-  *out << "<td>" << endl;
-  *out << evtProcessor_->currentStateName() << endl;
-  *out << "</td>" << endl;
-  *out << "</tr>"                                            << endl;
-  *out << "<tr>" << endl;
-  *out << "<td>" << endl;
-  *out << "edm::EP initialized" << endl;
-  *out << "</td>" << endl;
-  *out << "<td>" << endl;
-  *out << epInitialized_ << endl;
-  *out << "</td>" << endl;
-  *out << "  </tr>"                                            << endl;
-  *out << "<tr>" << endl;
-  *out << "<td >" << endl;
-  *out << "Processed Events/Accepted Events" << endl;
-  *out << "</td>" << endl;
-  *out << "<td>" << endl;
-  *out << evtProcessor_->totalEvents() << "/" 
-       << evtProcessor_->totalEventsPassed() << endl;
-  *out << "</td>" << endl;
-  *out << "  </tr>"                                            << endl;
-  *out << "<tr>" << endl;
-  *out << "<td >" << endl;
-  *out << "Endpaths State" << endl;
-  *out << "</td>" << endl;
-  *out << "<td";
+  *out << "<tr valign=\"top\">"						<< endl;
+  *out << "<td>"							<< endl;
+  //status table
+  *out << "<table frame=\"void\" rules=\"groups\" class=\"states\">"	<< endl;
+  *out << "<colgroup> <colgroup align=\"rigth\">"			<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <th colspan=2>"						<< endl;
+  *out << "      " << "Status"						<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <th >"							<< endl;
+  *out << "       Parameter"						<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "    <th>"							<< endl;
+  *out << "       Value"						<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <td >"							<< endl;
+  *out << "       EP state"						<< endl;
+  *out << "    </td>"							<< endl;
+  *out << "    <td>"							<< endl;
+  *out << "      " << evtProcessor_->currentStateName()			<< endl;
+  *out << "    </td>"							<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <td>"							<< endl;
+  *out << "       edm::EP initialized"					<< endl;
+  *out << "    </td>"							<< endl;
+  *out << "    <td>"							<< endl;
+  *out << "      " <<epInitialized_					<< endl;
+  *out << "    </td>"							<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <td >"							<< endl;
+  *out << "       Processed Events/Accepted Events"			<< endl;
+  *out << "    </td>"							<< endl;
+  *out << "    <td>"							<< endl;
+  *out << "      " << evtProcessor_->totalEvents() << "/" 
+       << evtProcessor_->totalEventsPassed()				<< endl;
+  *out << "    </td>"							<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <td>Endpaths State</td>"					<< endl;
+  *out << "    <td";
   *out << (evtProcessor_->endPathsEnabled() ?  "> enabled" : 
-	   " bgcolor=\"red\"> disabled" ) << endl;
-  *out << "</td>" << endl;
-  *out << "  </tr>"                                            << endl;
-  *out << "<tr>" << endl;
-  *out << "<td >" << endl;
-  *out << "Global Input Prescale" << endl;
-  *out << "</td>" << endl;
-  *out << "<td";
-  *out << "> N/A this version" << endl;
-  *out << "</td>" << endl;
-  *out << "  </tr>"                                            << endl;
-  *out << "<tr>" << endl;
-  *out << "<td >" << endl;
-  *out << "Global Output Prescale" << endl;
-  *out << "</td>" << endl;
-  *out << "<td";
-  *out << ">N/A this version" << endl;
-  *out << "</td>" << endl;
-  *out << "  </tr>"                                            << endl;
+	   " bgcolor=\"red\"> disabled" );
+  *out << "    </td>"							<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <td >Global Input Prescale</td>"				<< endl;
+  *out << "    <td> N/A this version</td>"				<< endl;
+  *out << "  </tr>"							<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <td >Global Output Prescale</td>"			<< endl;
+  *out << "    <td>N/A this version</td>"				<< endl;
+  *out << "  </tr>"							<< endl;
   
-  
-  
-  *out << "</table>" << endl;
+  *out << "</table>"							<< endl;
 
   *out << "<td>" << endl;
+  // trigger summary table
   *out << "<table border=1 bgcolor=\"#CFCFCF\">" << endl;
-  *out << "  <tr>"                                                   << endl;
-  *out << "    <th colspan=5>"                                       << endl;
-  *out << "      " << "Trigger Summary"                              << endl;
-  *out << "    </th>"                                                << endl;
-  *out << "  </tr>"                                                  << endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <th colspan=5>"						<< endl;
+  *out << "      " << "Trigger Summary"					<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "  </tr>"							<< endl;
 
-  *out << "<tr >" << endl;
-  *out << "<th >" << endl;
-  *out << "Path"  << endl;
-  *out << "</th>" << endl;
-  *out << "<th >" << endl;
-  *out << "Exec" << endl;
-  *out << "</th>" << endl;
-  *out << "<th >" << endl;
-  *out << "Pass" << endl;
-  *out << "</th>" << endl;
-  *out << "<th >" << endl;
-  *out << "Fail" << endl;
-  *out << "</th>" << endl;
-  *out << "<th >" << endl;
-  *out << "Except" << endl;
-  *out << "</th>" << endl;
-  *out << "</tr>" << endl;
+  *out << "  <tr >"							<< endl;
+  *out << "    <th >Path</th>"						<< endl;
+  *out << "    <th >Exec</th>"						<< endl;
+  *out << "    <th >Pass</th>"						<< endl;
+  *out << "    <th >Fail</th>"						<< endl;
+  *out << "    <th >Except</th>"					<< endl;
+  *out << "  </tr>"							<< endl;
 
 
   for(unsigned int i=0; i<tr.trigPathSummaries.size(); i++) {
-    *out << "<tr>" << endl;
-    *out << "<td >";
-    *out << tr.trigPathSummaries[i].name;
-    *out << "</td>" << endl;
-    *out << "<td >";
-    *out << tr.trigPathSummaries[i].timesRun;
-    *out << "</td>" << endl;
-    *out << "<td >";
-    *out << tr.trigPathSummaries[i].timesPassed;
-    *out << "</td>" << endl;
-    *out << "<td >";
-    *out << tr.trigPathSummaries[i].timesFailed;
-    *out << "</td>" << endl;
-    *out << "<td >";
-    *out << tr.trigPathSummaries[i].timesExcept;
-    *out << "</td>" << endl;
-    *out << "</tr >" << endl;
+    *out << "  <tr>" << endl;
+    *out << "    <td>"<< tr.trigPathSummaries[i].name << "</td>"		<< endl;
+    *out << "    <td>" << tr.trigPathSummaries[i].timesRun << "</td>"		<< endl;
+    *out << "    <td>" << tr.trigPathSummaries[i].timesPassed << "</td>"	<< endl;
+    *out << "    <td >" << tr.trigPathSummaries[i].timesFailed << "</td>"	<< endl;
+    *out << "    <td >" << tr.trigPathSummaries[i].timesExcept << "</td>"	<< endl;
+    *out << "  </tr >"								<< endl;
 
   }
   *out << "</table>" << endl;
   *out << "</td>" << endl;
   *out << "</tr><tr colspan=2>" << endl;
-  *out << "<table frame=\"void\" rules=\"rows\" class=\"modules\">" << endl;
-  *out << "  <tr>"                                                   << endl;
-  *out << "    <th colspan=3>"                                       << endl;
-  *out << "      " << "HLT"                                          << endl;
-  
+
+  //Process details table
+  *out << "<table frame=\"void\" rules=\"rows\" class=\"modules\">"	<< endl;
+  *out << "  <tr>"							<< endl;
+  *out << "    <th colspan=3>"						<< endl;
+  *out << "      " << "HLT"						<< endl;
   if(descs_.size()>0)
-    *out << " (Process " << descs_[0]->processName() << ")"          << endl;
-  
-  
-  
-  *out << "    </th>"                                                << endl;
-  *out << "  </tr>"                                                  << endl;
-  
-  *out << "<tr >" << endl;
-  *out << "<th >" << endl;
-  *out << "Module" << endl;
-  *out << "</th>" << endl;
-  *out << "<th >" << endl;
-  *out << "Label" << endl;
-  *out << "</th>" << endl;
-  *out << "<th >" << endl;
-  *out << "Version" << endl;
-  *out << "</th>" << endl;
-  *out << "</tr>" << endl;
+    *out << " (Process " << descs_[0]->processName() << ")"		<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "  </tr>"							<< endl;
+
+  *out << "  <tr >"							<< endl;
+  *out << "    <th >"							<< endl;
+  *out << "       Module"						<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "    <th >"							<< endl;
+  *out << "       Label"						<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "    <th >"							<< endl;
+  *out << "       Version"						<< endl;
+  *out << "    </th>"							<< endl;
+  *out << "  </tr>"							<< endl;
   
   for(unsigned int idesc = 0; idesc < descs_.size(); idesc++)
     {
-      *out << "<tr>" << endl;
-      *out << "<td >" << endl;
+      *out << "  <tr>"							<< endl;
+      *out << "    <td >";
       if(mwr && mwr->checkWeb(descs_[idesc]->moduleName()))
-	*out << "<a href=\"/" << urn << "/moduleWeb?module=" << descs_[idesc]->moduleName() << "\">" 
-	     << descs_[idesc]->moduleName() << "</a>" << endl;
+	*out << "<a href=\"/" << urn 
+	     << "/moduleWeb?module=" 
+	     << descs_[idesc]->moduleName() << "\">" 
+	     << descs_[idesc]->moduleName() << "</a>";
       else
-	*out << descs_[idesc]->moduleName() << endl;
-      *out << "</td>" << endl;
-      *out << "<td >" << endl;
-      *out << descs_[idesc]->moduleLabel() << endl;
-      *out << "</td>" << endl;
-      *out << "<td >" << endl;
-      *out << descs_[idesc]->releaseVersion() << endl;
-      *out << "</td>" << endl;
-      *out << "</tr>" << endl;
+	*out << descs_[idesc]->moduleName();
+      *out << "</td>"							<< endl;
+      *out << "    <td >";
+      *out << descs_[idesc]->moduleLabel();
+      *out << "</td>"							<< endl;
+      *out << "    <td >";
+      *out << descs_[idesc]->releaseVersion();
+      *out << "</td>"							<< endl;
+      *out << "  </tr>" << endl;
     }
   *out << "</table>" << endl;
   *out << "</td>" << endl;

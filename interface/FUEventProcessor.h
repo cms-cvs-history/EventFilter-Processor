@@ -24,6 +24,7 @@
 #include "xgi/include/xgi/Output.h"
 #include "xgi/include/xgi/exception/Exception.h"
 
+#include <sys/time.h>
 
 namespace edm {
   class EventProcessor;
@@ -102,6 +103,10 @@ namespace evf
     void attachDqmToShm()   throw (evf::Exception);
     void detachDqmFromShm() throw (evf::Exception);
 
+    // calculate monitoring information in separate thread
+    void startMonitoringWorkLoop() throw (evf::Exception);
+    bool monitoring(toolbox::task::WorkLoop* wl);
+
     
   private:
     //
@@ -120,14 +125,19 @@ namespace evf
     edm::service::PrescaleService*  prescaleSvc_;
     
     // parameters published to XDAQ info space(s)
+    xdata::String                    url_;
+    xdata::String                    class_;
+    xdata::UnsignedInteger32         instance_;
     xdata::UnsignedInteger32         runNumber_;
     xdata::Boolean                   epInitialized_; 
     xdata::String                    configString_;
+    std::string                      configuration_;
     xdata::String                    sealPluginPath_;
     xdata::Boolean                   outPut_;
     xdata::UnsignedInteger32         inputPrescale_;
     xdata::UnsignedInteger32         outputPrescale_;
     xdata::UnsignedInteger32         timeoutOnStop_; // in seconds
+    xdata::Boolean                   hasShMem_;
     bool                             outprev_;
     
     // dqm monitor thread configuration
@@ -140,6 +150,23 @@ namespace evf
     // xdaq parameters relevant to trigger-report / prescales
     xdata::String                    triggerReportAsString_;
     xdata::String                    prescalerAsString_;
+
+    // xdaq monitoring
+    xdata::UnsignedInteger32         monSleepSec_;
+    struct timeval                   monStartTime_;
+
+    // workloop / action signature for monitoring
+    toolbox::task::WorkLoop         *wlMonitoring_;      
+    toolbox::task::ActionSignature  *asMonitoring_;
+
+    // application identifier
+    std::string                      sourceId_;
+
+    // flahslist variables
+    xdata::String                    epMState_;
+    xdata::String                    epmState_;
+    xdata::UnsignedInteger32         nbProcessed_;
+    xdata::UnsignedInteger32         nbAccepted_;
 
     // HyperDAQ related
     Css                              css_;

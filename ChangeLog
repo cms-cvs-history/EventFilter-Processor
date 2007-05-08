@@ -1,3 +1,13 @@
+2007-05-08  Emilio Meschi  <emilio.meschi@cern.ch>
+
+	* tag V00-11-07
+	* added flashlist to infospace and monitoring workloop
+	* does not access microstate when not in running mode
+	* cleaned up web page (separated configuration and state
+	* added switch to disable shared memory
+	* added trigger summary to web page
+	* now displays content of cfg file 
+
 2007-04-30  Emilio Meschi  <emilio.meschi@cern.ch>
 
 	* tag V00-11-06
