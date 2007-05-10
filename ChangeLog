@@ -1,5 +1,10 @@
 2007-05-08  Emilio Meschi  <emilio.meschi@cern.ch>
 
+	* tag V00-11-08
+	* lock infospace in monitoring workloop
+
+2007-05-08  Emilio Meschi  <emilio.meschi@cern.ch>
+
 	* tag V00-11-07
 	* added flashlist to infospace and monitoring workloop
 	* does not access microstate when not in running mode

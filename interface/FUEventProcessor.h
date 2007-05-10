@@ -167,7 +167,8 @@ namespace evf
     xdata::String                    epmState_;
     xdata::UnsignedInteger32         nbProcessed_;
     xdata::UnsignedInteger32         nbAccepted_;
-
+    xdata::InfoSpace                *mispace;
+    
     // HyperDAQ related
     Css                              css_;
     

@@ -160,7 +160,7 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
   oss2<<"urn:xdaq-monitorable:"<<class_.toString()<<":"<<instance_.toString();
   string monInfoSpaceName=oss2.str();
 
-  xdata::InfoSpace *mispace = xdata::InfoSpace::get(monInfoSpaceName);
+  mispace = xdata::InfoSpace::get(monInfoSpaceName);
   mispace->fireItemAvailable("url",                      &url_);
   mispace->fireItemAvailable("class",                    &class_);
   mispace->fireItemAvailable("instance",                 &instance_);
@@ -1067,7 +1067,7 @@ void FUEventProcessor::defaultWebPage(xgi::Input  *in, xgi::Output *out)
   *out << "Plugin Path" << endl;
   *out << "</td>" << endl;
   *out << "<td>" << endl;
-  *out << sealPluginPath_.value_ << endl;
+  *out << getenv("SEAL_PLUGINS") << endl;
   *out << "</td>" << endl;
   *out << "</tr>"                                            << endl;
   *out << "<tr>" << endl;
@@ -1472,11 +1472,12 @@ bool FUEventProcessor::monitoring(toolbox::task::WorkLoop* wl)
 		       "exception when trying to get service MicroStateService");
       }
     }
+  mispace->lock();
   if(mss) 
     epmState_  = mss->getMicroState2();
   nbProcessed_ = evtProcessor_->totalEvents();
   nbAccepted_  = evtProcessor_->totalEventsPassed(); 
-  
+  mispace->unlock();
   ::sleep(monSleepSec_.value_);
   
   return true;
