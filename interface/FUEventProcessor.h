@@ -61,7 +61,7 @@ namespace evf
     // trigger prescale callbacks
     xoap::MessageReference getPsReport(xoap::MessageReference msg)
       throw (xoap::exception::Exception);
-    xoap::MessageReference setPsUpdate(xoap::MessageReference msg)
+    xoap::MessageReference getLsReport(xoap::MessageReference msg)
       throw (xoap::exception::Exception);
     xoap::MessageReference putPrescaler(xoap::MessageReference msg)
       throw (xoap::exception::Exception);
