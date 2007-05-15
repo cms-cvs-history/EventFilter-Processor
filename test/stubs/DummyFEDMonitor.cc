@@ -3,8 +3,8 @@
  * dummy FED unpacking module: loops over feds and fills a datasize histogram
  *   
  * 
- * $Date: 2006/11/14 10:30:47 $
- * $Revision: 1.9 $
+ * $Date: 2007/02/14 09:13:25 $
+ * $Revision: 1.10 $
  * \author E. Meschi PH/CMD
  *
 */
@@ -33,10 +33,10 @@ namespace test{
     MonitorElement * hfedprof;
     MonitorElement ** hindfed;
     bool dqm;
-
+    bool cleanup;
   public:
 
-    DummyFEDMonitor(const edm::ParameterSet& pset):count_(0), dqm(true)
+    DummyFEDMonitor(const edm::ParameterSet& pset):count_(0), dqm(true), cleanup(false)
     {
       DaqMonitorBEInterface *dbe = 0;
       try{
@@ -56,6 +56,12 @@ namespace test{
 	  // do nothing, it means dqm is not available
 	}
     }
+    ~DummyFEDMonitor()
+    {
+      if(!cleanup) endRun();
+      delete [] hindfed;
+    }
+
     void beginJob(edm::EventSetup const&es)
     {
       for(int i = 0; i<FEDNumbering::lastFEDId(); i++)
@@ -63,7 +69,11 @@ namespace test{
     }
     void endJob()
     {
-
+      if(!cleanup) endRun();
+    }
+    void endRun()
+    {
+      cleanup = true;
       DaqMonitorBEInterface *dbe = 0;
       
       try{
@@ -79,10 +89,9 @@ namespace test{
 	  // do nothing, it means dqm is not available
 	}
 
-      delete [] hindfed;
+
     }
     void analyze(const edm::Event & e, const edm::EventSetup& c){
-      
       ++count_;
       if(dqm)
 	{
