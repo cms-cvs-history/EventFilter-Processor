@@ -581,8 +581,12 @@ void FUEventProcessor::initEventProcessor()
   
   boost::shared_ptr<edm::ParameterSet> params; // change this name!
   boost::shared_ptr<vector<edm::ParameterSet> > pServiceSets;
-  makeParameterSets(configuration_, params, pServiceSets);
-  
+  try{
+    makeParameterSets(configuration_, params, pServiceSets);
+  }
+  catch(cms::Exception &e){
+    fsm_.fireFailed(e.explainSelf(),this);
+  }  
   // add default set of services
   if(!servicesDone_) {
     internal::addServiceMaybe(*pServiceSets,"DaqMonitorROOTBackEnd");
