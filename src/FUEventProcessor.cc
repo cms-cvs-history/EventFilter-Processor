@@ -528,8 +528,10 @@ bool FUEventProcessor::halting(toolbox::task::WorkLoop* wl)
 	detachDqmFromShm();
 	if(st == edm::event_processor::sJobReady || st == edm::event_processor::sDone)
 	  evtProcessor_->endJob();
+	mispace->lock(); //protect monitoring workloop from using ep pointer while it is being deleted
 	delete evtProcessor_;
 	evtProcessor_ = 0;
+	mispace->unlock();
 	epInitialized_ = false;
 	LOG4CPLUS_INFO(getApplicationLogger(),"Finished halting!");
   
@@ -590,7 +592,7 @@ void FUEventProcessor::initEventProcessor()
   // add default set of services
   if(!servicesDone_) {
     internal::addServiceMaybe(*pServiceSets,"DaqMonitorROOTBackEnd");
-    internal::addServiceMaybe(*pServiceSets,"MonitorDaemon");
+    //    internal::addServiceMaybe(*pServiceSets,"MonitorDaemon");
     internal::addServiceMaybe(*pServiceSets,"MLlog4cplus");
     internal::addServiceMaybe(*pServiceSets,"MicroStateService");
     internal::addServiceMaybe(*pServiceSets,"PrescaleService");
@@ -620,11 +622,17 @@ void FUEventProcessor::initEventProcessor()
 				       dqmCollectorDelay_,
 				       dqmCollectorSourceName_,
 				       dqmCollectorReconDelay_);
-    edm::Service<ML::MLlog4cplus>()->setAppl(this);
   }
   catch(...) { 
     LOG4CPLUS_INFO(getApplicationLogger(),
 		   "exception when trying to get service MonitorDaemon");
+  }
+  try{
+    edm::Service<ML::MLlog4cplus>()->setAppl(this);
+  }
+  catch(...) { 
+    LOG4CPLUS_INFO(getApplicationLogger(),
+		   "exception when trying to get service Mlog4cplus");
   }
 
   
@@ -1484,10 +1492,16 @@ bool FUEventProcessor::monitoring(toolbox::task::WorkLoop* wl)
   struct timeval  monEndTime;
   struct timezone timezone;
   gettimeofday(&monEndTime,&timezone);
-
-  epMState_ = evtProcessor_->currentStateName();
+  
   edm::ServiceRegistry::Operate operate(serviceToken_);
   MicroStateService *mss = 0;
+
+  mispace->lock();
+  if(evtProcessor_)
+    epMState_ = evtProcessor_->currentStateName();
+  else
+    epMState_ = "Off";
+
   if(0 != evtProcessor_ && evtProcessor_->getState() != edm::event_processor::sInit)
     {
       try{
@@ -1498,11 +1512,13 @@ bool FUEventProcessor::monitoring(toolbox::task::WorkLoop* wl)
 		       "exception when trying to get service MicroStateService");
       }
     }
-  mispace->lock();
   if(mss) 
     epmState_  = mss->getMicroState2();
-  nbProcessed_ = evtProcessor_->totalEvents();
-  nbAccepted_  = evtProcessor_->totalEventsPassed(); 
+  if(evtProcessor_)
+    {
+      nbProcessed_ = evtProcessor_->totalEvents();
+      nbAccepted_  = evtProcessor_->totalEventsPassed(); 
+    }
   mispace->unlock();
   ::sleep(monSleepSec_.value_);
   
