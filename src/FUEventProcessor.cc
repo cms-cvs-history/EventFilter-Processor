@@ -679,12 +679,14 @@ void FUEventProcessor::initEventProcessor()
     defaultServices.push_back("InitRootHandlers");
     defaultServices.push_back("JobReportService");
     
+    mispace->lock();
     if (0!=evtProcessor_) delete evtProcessor_;
     
     evtProcessor_ = new edm::EventProcessor(configuration_,
 					    serviceToken_,
 					    edm::serviceregistry::kTokenOverrides,
 					    defaultServices);
+    mispace->unlock();
     //    evtProcessor_->setRunNumber(runNumber_.value_);
 
     if(!outPut_)
