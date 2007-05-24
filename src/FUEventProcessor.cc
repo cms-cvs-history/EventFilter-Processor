@@ -233,8 +233,10 @@ xoap::MessageReference FUEventProcessor::getPsReport(xoap::MessageReference msg)
   
   //Get the trigger report.
   edm::TriggerReport tr; 
-  evtProcessor_->getTriggerReport(tr);
-  
+  mispace->lock();
+  if(evtProcessor_)
+    evtProcessor_->getTriggerReport(tr);
+  mispace->unlock();  
   // xdata::String ReportAsString = triggerReportToString(tr);
   string s = triggerReportToString(tr);
   
@@ -344,7 +346,7 @@ xoap::MessageReference FUEventProcessor::putPrescaler(xoap::MessageReference msg
   //Next this function is called to pick up the new string value and fill the 
   //appropriate prescaler structure for addition to the prescaler cache...
   
-  LOG4CPLUS_INFO(getApplicationLogger(),"putPrescaler action invoked");
+  //  LOG4CPLUS_INFO(getApplicationLogger(),"putPrescaler action invoked");
   
   //  msg->writeTo(std::cout);
   //  cout << endl;
@@ -378,8 +380,8 @@ xoap::MessageReference FUEventProcessor::putPrescaler(xoap::MessageReference msg
   }
   
   //Get the prescaler string value. (Which was set by the FM)
-  LOG4CPLUS_INFO(getApplicationLogger(),
-		 "Using new prescaler string setting: "<<prescalerAsString);
+  //  LOG4CPLUS_INFO(getApplicationLogger(),
+  //		 "Using new prescaler string setting: "<<prescalerAsString);
 
 
   if ( prescalerAsString == "INITIAL_VALUE" ) {
