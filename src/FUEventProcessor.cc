@@ -185,6 +185,27 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
 
   // instantiate the plugin manager, not referenced here after!
   edm::AssertHandler ah;
+
+  try{
+    LOG4CPLUS_DEBUG(getApplicationLogger(),
+		    "Trying to create message service presence ");
+    edm::PresenceFactory *pf = edm::PresenceFactory::get();
+    if(pf != 0) {
+      pf->makePresence("MessageServicePresence").release();
+    }
+    else {
+      LOG4CPLUS_ERROR(getApplicationLogger(),
+		      "Unable to create message service presence ");
+    }
+  } 
+  catch(seal::Error& e) {
+    LOG4CPLUS_ERROR(getApplicationLogger(),e.explainSelf());
+  }
+  catch(...) {
+    LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception");
+  }
+  ML::MLlog4cplus::setAppl(this);
+    
 }
 
 
@@ -614,6 +635,7 @@ void FUEventProcessor::initEventProcessor()
     catch(...) {
       LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception");
     }
+    servicesDone_ = true;
   }
 
   
@@ -626,47 +648,8 @@ void FUEventProcessor::initEventProcessor()
 				       dqmCollectorReconDelay_);
   }
   catch(...) { 
-    LOG4CPLUS_INFO(getApplicationLogger(),
+    LOG4CPLUS_DEBUG(getApplicationLogger(),
 		   "exception when trying to get service MonitorDaemon");
-  }
-  try{
-    edm::Service<ML::MLlog4cplus>()->setAppl(this);
-  }
-  catch(...) { 
-    LOG4CPLUS_INFO(getApplicationLogger(),
-		   "exception when trying to get service Mlog4cplus");
-  }
-
-  
-  if(!servicesDone_) {
-    try{
-      LOG4CPLUS_DEBUG(getApplicationLogger(),
-		      "Trying to create message service presence ");
-      edm::PresenceFactory *pf = edm::PresenceFactory::get();
-      if(pf != 0) {
-	pf->makePresence("MessageServicePresence").release();
-      }
-      else {
-	LOG4CPLUS_ERROR(getApplicationLogger(),
-			"Unable to create message service presence ");
-      }
-      
-      servicesDone_ = true;
-      
-    } 
-    catch(seal::Error& e) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),e.explainSelf());
-    }
-    catch(cms::Exception &e) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),e.explainSelf());
-    }    
-    catch(std::exception &e) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),e.what());
-    }
-    catch(...) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception");
-    }
-    
   }
   
   //test rerouting of fwk logging to log4cplus
@@ -743,7 +726,7 @@ void FUEventProcessor::initEventProcessor()
     return;
   }    
   catch(std::exception &e) {
-    fsm_.fireEvent(e.what(),this);
+    fsm_.fireFailed(e.what(),this);
     return;
   }
   catch(...) {
