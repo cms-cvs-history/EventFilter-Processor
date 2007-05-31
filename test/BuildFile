@@ -1,6 +1,0 @@
-<library file=stubs/DummyFEDMonitor.cc name=testEventFilterProcessor>
-   <flags SEAL_PLUGIN_NAME="testEventFilterProcessor"> 
-   <use name=FWCore/Framework>
-   <use name=DQMServices/Core>
-   <use name=DataFormats/FEDRawData>
-</library> 
