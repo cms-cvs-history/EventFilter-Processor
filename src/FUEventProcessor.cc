@@ -474,7 +474,11 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
     if(hasShMem_) attachDqmToShm();
 
     int sc = 0;
-    if(setsRunNo_) evtProcessor_->setRunNumber(runNumber_.value_);
+    if(setsRunNo_) 
+      evtProcessor_->setRunNumber(runNumber_.value_);
+    else
+      evtProcessor_->beginJob();
+
     try {
       evtProcessor_->runAsync();
       sc = evtProcessor_->statusAsync();
