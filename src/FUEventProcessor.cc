@@ -96,6 +96,7 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
   , outputPrescale_(1)
   , timeoutOnStop_(10)
   , hasShMem_(true)
+  , setsRunNo_(true)
   , outprev_(true)
   , monSleepSec_(1)
   , wlMonitoring_(0)
@@ -135,6 +136,7 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
   ispace->fireItemAvailable("globalOutputPrescale", &outputPrescale_);
   ispace->fireItemAvailable("timeoutOnStop",        &timeoutOnStop_);
   ispace->fireItemAvailable("hasSharedMemory",      &hasShMem_);
+  ispace->fireItemAvailable("setsRunNumber",        &setsRunNo_);
   ispace->fireItemAvailable("monSleepSec",          &monSleepSec_);
 
   ispace->fireItemAvailable("foundRcmsStateListener",fsm_.foundRcmsStateListener());
@@ -472,7 +474,7 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
     if(hasShMem_) attachDqmToShm();
 
     int sc = 0;
-    evtProcessor_->setRunNumber(runNumber_.value_);
+    if(setsRunNo_) evtProcessor_->setRunNumber(runNumber_.value_);
     try {
       evtProcessor_->runAsync();
       sc = evtProcessor_->statusAsync();
