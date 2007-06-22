@@ -96,6 +96,7 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
   , outputPrescale_(1)
   , timeoutOnStop_(10)
   , hasShMem_(true)
+  , setsRunNo_(true)
   , outprev_(true)
   , monSleepSec_(1)
   , wlMonitoring_(0)
@@ -135,6 +136,7 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
   ispace->fireItemAvailable("globalOutputPrescale", &outputPrescale_);
   ispace->fireItemAvailable("timeoutOnStop",        &timeoutOnStop_);
   ispace->fireItemAvailable("hasSharedMemory",      &hasShMem_);
+  ispace->fireItemAvailable("setsRunNumber",        &setsRunNo_);
   ispace->fireItemAvailable("monSleepSec",          &monSleepSec_);
 
   ispace->fireItemAvailable("foundRcmsStateListener",fsm_.foundRcmsStateListener());
@@ -185,6 +187,27 @@ FUEventProcessor::FUEventProcessor(xdaq::ApplicationStub *s)
 
   // instantiate the plugin manager, not referenced here after!
   edm::AssertHandler ah;
+
+  try{
+    LOG4CPLUS_DEBUG(getApplicationLogger(),
+		    "Trying to create message service presence ");
+    edm::PresenceFactory *pf = edm::PresenceFactory::get();
+    if(pf != 0) {
+      pf->makePresence("MessageServicePresence").release();
+    }
+    else {
+      LOG4CPLUS_ERROR(getApplicationLogger(),
+		      "Unable to create message service presence ");
+    }
+  } 
+  catch(seal::Error& e) {
+    LOG4CPLUS_ERROR(getApplicationLogger(),e.explainSelf());
+  }
+  catch(...) {
+    LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception");
+  }
+  ML::MLlog4cplus::setAppl(this);
+    
 }
 
 
@@ -233,8 +256,10 @@ xoap::MessageReference FUEventProcessor::getPsReport(xoap::MessageReference msg)
   
   //Get the trigger report.
   edm::TriggerReport tr; 
-  evtProcessor_->getTriggerReport(tr);
-  
+  mispace->lock();
+  if(evtProcessor_)
+    evtProcessor_->getTriggerReport(tr);
+  mispace->unlock();  
   // xdata::String ReportAsString = triggerReportToString(tr);
   string s = triggerReportToString(tr);
   
@@ -344,7 +369,7 @@ xoap::MessageReference FUEventProcessor::putPrescaler(xoap::MessageReference msg
   //Next this function is called to pick up the new string value and fill the 
   //appropriate prescaler structure for addition to the prescaler cache...
   
-  LOG4CPLUS_INFO(getApplicationLogger(),"putPrescaler action invoked");
+  //  LOG4CPLUS_INFO(getApplicationLogger(),"putPrescaler action invoked");
   
   //  msg->writeTo(std::cout);
   //  cout << endl;
@@ -378,8 +403,8 @@ xoap::MessageReference FUEventProcessor::putPrescaler(xoap::MessageReference msg
   }
   
   //Get the prescaler string value. (Which was set by the FM)
-  LOG4CPLUS_INFO(getApplicationLogger(),
-		 "Using new prescaler string setting: "<<prescalerAsString);
+  //  LOG4CPLUS_INFO(getApplicationLogger(),
+  //		 "Using new prescaler string setting: "<<prescalerAsString);
 
 
   if ( prescalerAsString == "INITIAL_VALUE" ) {
@@ -449,7 +474,11 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
     if(hasShMem_) attachDqmToShm();
 
     int sc = 0;
-    evtProcessor_->setRunNumber(runNumber_.value_);
+    if(setsRunNo_) 
+      evtProcessor_->setRunNumber(runNumber_.value_);
+    else
+      evtProcessor_->declareRunNumber(runNumber_.value_);
+
     try {
       evtProcessor_->runAsync();
       sc = evtProcessor_->statusAsync();
@@ -528,8 +557,10 @@ bool FUEventProcessor::halting(toolbox::task::WorkLoop* wl)
 	detachDqmFromShm();
 	if(st == edm::event_processor::sJobReady || st == edm::event_processor::sDone)
 	  evtProcessor_->endJob();
+	mispace->lock(); //protect monitoring workloop from using ep pointer while it is being deleted
 	delete evtProcessor_;
 	evtProcessor_ = 0;
+	mispace->unlock();
 	epInitialized_ = false;
 	LOG4CPLUS_INFO(getApplicationLogger(),"Finished halting!");
   
@@ -581,12 +612,16 @@ void FUEventProcessor::initEventProcessor()
   
   boost::shared_ptr<edm::ParameterSet> params; // change this name!
   boost::shared_ptr<vector<edm::ParameterSet> > pServiceSets;
-  makeParameterSets(configuration_, params, pServiceSets);
-  
+  try{
+    makeParameterSets(configuration_, params, pServiceSets);
+  }
+  catch(cms::Exception &e){
+    fsm_.fireFailed(e.explainSelf(),this);
+  }  
   // add default set of services
   if(!servicesDone_) {
     internal::addServiceMaybe(*pServiceSets,"DaqMonitorROOTBackEnd");
-    internal::addServiceMaybe(*pServiceSets,"MonitorDaemon");
+    //    internal::addServiceMaybe(*pServiceSets,"MonitorDaemon");
     internal::addServiceMaybe(*pServiceSets,"MLlog4cplus");
     internal::addServiceMaybe(*pServiceSets,"MicroStateService");
     internal::addServiceMaybe(*pServiceSets,"PrescaleService");
@@ -606,6 +641,7 @@ void FUEventProcessor::initEventProcessor()
     catch(...) {
       LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception");
     }
+    servicesDone_ = true;
   }
 
   
@@ -616,43 +652,10 @@ void FUEventProcessor::initEventProcessor()
 				       dqmCollectorDelay_,
 				       dqmCollectorSourceName_,
 				       dqmCollectorReconDelay_);
-    edm::Service<ML::MLlog4cplus>()->setAppl(this);
   }
   catch(...) { 
-    LOG4CPLUS_INFO(getApplicationLogger(),
+    LOG4CPLUS_DEBUG(getApplicationLogger(),
 		   "exception when trying to get service MonitorDaemon");
-  }
-
-  
-  if(!servicesDone_) {
-    try{
-      LOG4CPLUS_DEBUG(getApplicationLogger(),
-		      "Trying to create message service presence ");
-      edm::PresenceFactory *pf = edm::PresenceFactory::get();
-      if(pf != 0) {
-	pf->makePresence("MessageServicePresence").release();
-      }
-      else {
-	LOG4CPLUS_ERROR(getApplicationLogger(),
-			"Unable to create message service presence ");
-      }
-      
-      servicesDone_ = true;
-      
-    } 
-    catch(seal::Error& e) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),e.explainSelf());
-    }
-    catch(cms::Exception &e) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),e.explainSelf());
-    }    
-    catch(std::exception &e) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),e.what());
-    }
-    catch(...) {
-      LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception");
-    }
-    
   }
   
   //test rerouting of fwk logging to log4cplus
@@ -667,12 +670,14 @@ void FUEventProcessor::initEventProcessor()
     defaultServices.push_back("InitRootHandlers");
     defaultServices.push_back("JobReportService");
     
+    mispace->lock();
     if (0!=evtProcessor_) delete evtProcessor_;
     
     evtProcessor_ = new edm::EventProcessor(configuration_,
 					    serviceToken_,
 					    edm::serviceregistry::kTokenOverrides,
 					    defaultServices);
+    mispace->unlock();
     //    evtProcessor_->setRunNumber(runNumber_.value_);
 
     if(!outPut_)
@@ -727,7 +732,7 @@ void FUEventProcessor::initEventProcessor()
     return;
   }    
   catch(std::exception &e) {
-    fsm_.fireEvent(e.what(),this);
+    fsm_.fireFailed(e.what(),this);
     return;
   }
   catch(...) {
@@ -1480,10 +1485,16 @@ bool FUEventProcessor::monitoring(toolbox::task::WorkLoop* wl)
   struct timeval  monEndTime;
   struct timezone timezone;
   gettimeofday(&monEndTime,&timezone);
-
-  epMState_ = evtProcessor_->currentStateName();
+  
   edm::ServiceRegistry::Operate operate(serviceToken_);
   MicroStateService *mss = 0;
+
+  mispace->lock();
+  if(evtProcessor_)
+    epMState_ = evtProcessor_->currentStateName();
+  else
+    epMState_ = "Off";
+
   if(0 != evtProcessor_ && evtProcessor_->getState() != edm::event_processor::sInit)
     {
       try{
@@ -1494,11 +1505,13 @@ bool FUEventProcessor::monitoring(toolbox::task::WorkLoop* wl)
 		       "exception when trying to get service MicroStateService");
       }
     }
-  mispace->lock();
   if(mss) 
     epmState_  = mss->getMicroState2();
-  nbProcessed_ = evtProcessor_->totalEvents();
-  nbAccepted_  = evtProcessor_->totalEventsPassed(); 
+  if(evtProcessor_)
+    {
+      nbProcessed_ = evtProcessor_->totalEvents();
+      nbAccepted_  = evtProcessor_->totalEventsPassed(); 
+    }
   mispace->unlock();
   ::sleep(monSleepSec_.value_);
   
