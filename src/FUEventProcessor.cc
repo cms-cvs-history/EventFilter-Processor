@@ -477,7 +477,7 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
     if(setsRunNo_) 
       evtProcessor_->setRunNumber(runNumber_.value_);
     else
-      evtProcessor_->beginJob();
+      evtProcessor_->declareRunNumber(runNumber_.value_);
 
     try {
       evtProcessor_->runAsync();
