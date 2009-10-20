@@ -1,5 +1,5 @@
-#include "FWCore/PythonParameterSet/interface/MakeParameterSets.h"
-#include "FWCore/PythonParameterSet/interface/PythonProcessDesc.h"
+#include "FWCore/ParameterSet/interface/MakeParameterSets.h"
+#include "FWCore/ParameterSet/interface/PythonProcessDesc.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
