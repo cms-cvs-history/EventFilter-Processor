@@ -1,3 +1,21 @@
+#include "FWEPWrapper.h"
+
+#include "EventFilter/Utilities/interface/ParameterSetRetriever.h"
+#include "EventFilter/Utilities/interface/ModuleWebRegistry.h"
+#include "EventFilter/Utilities/interface/ServiceWebRegistry.h"
+#include "EventFilter/Utilities/interface/ServiceWeb.h"
+#include "EventFilter/Utilities/interface/MicroStateService.h"
+#include "EventFilter/Utilities/interface/TimeProfilerService.h"
+
+#include "toolbox/task/WorkLoopFactory.h"
+#include "xdaq/ApplicationDescriptorImpl.h"
+#include "xdaq/ContextDescriptor.h"
+#include "xdaq/ApplicationContext.h"
+#include "xdata/Boolean.h"
+#include "xdata/TableIterator.h"
+#include "xdata/exdr/Serializer.h"
+#include "xdata/exdr/AutoSizeOutputStreamBuffer.h"
+
 #include "FWCore/PythonParameterSet/interface/MakeParameterSets.h"
 #undef HAVE_STAT
 #include "FWCore/PythonParameterSet/interface/PythonProcessDesc.h"
@@ -8,23 +26,6 @@
 #include "FWCore/Framework/interface/TriggerReport.h"
 
 #include "DQMServices/Core/interface/DQMStore.h"
-
-#include "EventFilter/Utilities/interface/ParameterSetRetriever.h"
-#include "EventFilter/Utilities/interface/ModuleWebRegistry.h"
-#include "EventFilter/Utilities/interface/ServiceWebRegistry.h"
-#include "EventFilter/Utilities/interface/ServiceWeb.h"
-#include "EventFilter/Utilities/interface/MicroStateService.h"
-#include "EventFilter/Utilities/interface/TimeProfilerService.h"
-#include "FWEPWrapper.h"
-
-#include "toolbox/task/WorkLoopFactory.h"
-#include "xdaq/ApplicationDescriptorImpl.h"
-#include "xdaq/ContextDescriptor.h"
-#include "xdaq/ApplicationContext.h"
-#include "xdata/Boolean.h"
-#include "xdata/TableIterator.h"
-#include "xdata/exdr/Serializer.h"
-#include "xdata/exdr/AutoSizeOutputStreamBuffer.h"
 
 #include "xoap/MessageReference.h"
 #include "xoap/MessageFactory.h"
