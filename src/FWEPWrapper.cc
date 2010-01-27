@@ -1,4 +1,5 @@
 #include "FWCore/PythonParameterSet/interface/MakeParameterSets.h"
+#undef HAVE_STAT
 #include "FWCore/PythonParameterSet/interface/PythonProcessDesc.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/ParameterSet/interface/ProcessDesc.h"
