@@ -442,7 +442,8 @@ void TriggerReportHelpers::sumAndPackTriggerReport(MsgBuf &buf)
     return;
   }
   trs->lumiSection = lumiSectionIndex_;
-  trs->prescaleIndex = trp->prescaleIndex;
+  if(trp->eventSummary.totalEvents!=0)
+    trs->prescaleIndex = trp->prescaleIndex;
 
   //add to the event summary
   trs->eventSummary.totalEvents += trp->eventSummary.totalEvents;
