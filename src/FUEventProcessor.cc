@@ -946,6 +946,10 @@ bool FUEventProcessor::supervisor(toolbox::task::WorkLoop *)
 		    {
 		      myProcess_=&subs_[i];
 		      scalersUpdates_ = 0;
+		      int retval = pthread_mutex_destroy(&stop_lock_);
+		      if(retval != 0) perror("error");
+		      retval = pthread_mutex_init(&stop_lock_,0);
+		      if(retval != 0) perror("error");
 		      try{
 			pt::PeerTransport * ptr =
 			  pt::getPeerTransportAgent()->getPeerTransport("http","soap",pt::Receiver);
@@ -1769,7 +1773,7 @@ void FUEventProcessor::makeStaticInfo()
   using namespace utils;
   std::ostringstream ost;
   mDiv(&ost,"ve");
-  ost<< "$Revision: 1.115 $ (" << edm::getReleaseVersion() <<")";
+  ost<< "$Revision: 1.115.2.1 $ (" << edm::getReleaseVersion() <<")";
   cDiv(&ost);
   mDiv(&ost,"ou",outPut_.toString());
   mDiv(&ost,"sh",hasShMem_.toString());
