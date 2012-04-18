@@ -485,10 +485,14 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
   subs_.clear();
   subs_.resize(nbSubProcesses_.value_); // this should not be necessary
   pid_t retval = -1;
+
+  pthread_mutex_lock(&pickup_lock_);
   for(unsigned int i=0; i<nbSubProcesses_.value_; i++)
     {
       subs_[i]=SubProcess(i,retval); //this will replace all the scattered variables
     }
+  pthread_mutex_unlock(&pickup_lock_);
+
   pthread_mutex_unlock(&start_lock_);
 
   //use new method if configured
@@ -2254,7 +2258,7 @@ void FUEventProcessor::makeStaticInfo()
   using namespace utils;
   std::ostringstream ost;
   mDiv(&ost,"ve");
-  ost<< "$Revision: 1.134.2.1 $ (" << edm::getReleaseVersion() <<")";
+  ost<< "$Revision: 1.134.2.2 $ (" << edm::getReleaseVersion() <<")";
   cDiv(&ost);
   mDiv(&ost,"ou",outPut_.toString());
   mDiv(&ost,"sh",hasShMem_.toString());
