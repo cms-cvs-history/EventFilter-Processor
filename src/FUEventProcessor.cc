@@ -495,6 +495,22 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
 
   pthread_mutex_unlock(&start_lock_);
 
+  //set expected number of child EP's for the Init message(s) sent to the SM
+  try {
+    if (sorRef_) {
+      unsigned int nbExpectedEPWriters = nbSubProcesses_.value_;
+      if (nbExpectedEPWriters==0) nbExpectedEPWriters=1;//master instance processing
+      std::vector<edm::FUShmOutputModule *> shmOutputs = sorRef_->getShmOutputModules();
+      for (unsigned int i=0;i<shmOutputs.size();i++) {
+	shmOutputs[i]->setNExpectedEPs(nbExpectedEPWriters);
+      }
+    }
+  }
+  catch (...)
+  {
+    LOG4CPLUS_ERROR(getApplicationLogger(),"Thrown Exception while setting nExpectedEPs in shmOutputs");
+  }
+
   //use new method if configured
   edm_init_done_=true;
   if (forkInEDM_.value_) {
@@ -1712,6 +1728,7 @@ void FUEventProcessor::forkProcessFromEDM_helper(void * addr) {
 }
 
 void FUEventProcessor::forkProcessesFromEDM() {
+
   moduleweb::ForkParams * forkParams = &(forkInfoObj_->forkParams);
   unsigned int forkFrom=0;
   unsigned int forkTo=nbSubProcesses_.value_;
@@ -1719,6 +1736,25 @@ void FUEventProcessor::forkProcessesFromEDM() {
     forkFrom=forkParams->slotId;
     forkTo=forkParams->slotId+1;
   }
+
+  //before fork, make sure to disconnect output modules from Shm
+  try {
+    if (sorRef_) {
+      std::vector<edm::FUShmOutputModule *> shmOutputs = sorRef_->getShmOutputModules();
+      for (unsigned int i=0;i<shmOutputs.size();i++) {
+        //unregister PID from ShmBuffer/RB
+        shmOutputs[i]->unregisterFromShm();
+	//disconnect from Shm
+        shmOutputs[i]->stop();
+      }
+    }
+  }
+  catch (...)
+  {
+    LOG4CPLUS_ERROR(getApplicationLogger(),"Thrown Exception while disconnecting ShmOutputModule from Shm)");
+  }
+
+  //fork loop
   for(unsigned int i=forkFrom; i<forkTo; i++)
   {
 
@@ -1756,18 +1792,17 @@ void FUEventProcessor::forkProcessesFromEDM() {
 
       ML::MLlog4cplus::setAppl(this);
 
-      //shm output modules should send init msg
+      //reconnect to Shm from output modules
       try {
         if (sorRef_) {
 	  std::vector<edm::FUShmOutputModule *> shmOutputs = sorRef_->getShmOutputModules();
 	  for (unsigned int i=0;i<shmOutputs.size();i++)
-	    shmOutputs[i]->sendPostponedStart();
-	    //shmOutputs[i]->sendPostponedInitMsg();
+	    shmOutputs[i]->start();
         }
       }
       catch (...)
       {
-        LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception (ShmOutputModule sending InitMsg");
+        LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception (ShmOutputModule sending InitMsg (pid:"<<getpid() <<")");
       }
 
       if (forkParams->restart) {
@@ -1805,19 +1840,6 @@ void FUEventProcessor::forkProcessesFromEDM() {
       while(!evtProcessor_.isWaitingForLs())
 	::usleep(100000);//wait for scalers loop to start
 
-      //register outputs to Shm (can deadlock if RB is down, but we started receiver to get stop)
-      try {
-        if (sorRef_) {
-	  std::vector<edm::FUShmOutputModule *> shmOutputs = sorRef_->getShmOutputModules();
-	  for (unsigned int i=0;i<shmOutputs.size();i++)
-	    shmOutputs[i]->sendPostponedInitMsg();
-        }
-      }
-      catch (...)
-      {
-        LOG4CPLUS_ERROR(getApplicationLogger(),"Unknown Exception (ShmOutputModule sending InitMsg");
-      }
-
       //connect DQMShmOutputModule
       if(hasShMem_) attachDqmToShm();
 
@@ -1849,11 +1871,7 @@ bool FUEventProcessor::enableForkInEDM()
   try {
     //set to connect to Shm later
     //if(hasShMem_) setAttachDqmToShm();
-    if (sorRef_) {
-      std::vector<edm::FUShmOutputModule *> shmOutputs = sorRef_->getShmOutputModules();
-      for (unsigned int i=0;i<shmOutputs.size();i++)
-	    shmOutputs[i]->setPostponeInitMsg();
-    }
+
     int sc = 0;
     //maybe not needed in MP mode
     evtProcessor_->clearCounters();
@@ -2258,7 +2276,7 @@ void FUEventProcessor::makeStaticInfo()
   using namespace utils;
   std::ostringstream ost;
   mDiv(&ost,"ve");
-  ost<< "$Revision: 1.134.2.2 $ (" << edm::getReleaseVersion() <<")";
+  ost<< "$Revision: 1.134.2.3 $ (" << edm::getReleaseVersion() <<")";
   cDiv(&ost);
   mDiv(&ost,"ou",outPut_.toString());
   mDiv(&ost,"sh",hasShMem_.toString());
