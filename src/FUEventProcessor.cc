@@ -1749,9 +1749,18 @@ void FUEventProcessor::forkProcessesFromEDM() {
       }
     }
   }
-  catch (...)
+  catch (std::exception &e)
   {
-    LOG4CPLUS_ERROR(getApplicationLogger(),"Thrown Exception while disconnecting ShmOutputModule from Shm)");
+    reasonForFailedState_ =  (std::string)"Thrown exception while disconnecting ShmOutputModule from Shm: " + e.what();
+    LOG4CPLUS_ERROR(getApplicationLogger(),reasonForFailedState_);
+    fsm_.fireFailed(reasonForFailedState_,this);
+    localLog(reasonForFailedState_);
+  }
+  catch (...) {
+    reasonForFailedState_ =  "Thrown unknown exception while disconnecting ShmOutputModule from Shm: ";
+    LOG4CPLUS_ERROR(getApplicationLogger(),reasonForFailedState_);
+    fsm_.fireFailed(reasonForFailedState_,this);
+    localLog(reasonForFailedState_);
   }
 
   //fork loop
@@ -2276,7 +2285,7 @@ void FUEventProcessor::makeStaticInfo()
   using namespace utils;
   std::ostringstream ost;
   mDiv(&ost,"ve");
-  ost<< "$Revision: 1.134.2.3 $ (" << edm::getReleaseVersion() <<")";
+  ost<< "$Revision: 1.134.2.4 $ (" << edm::getReleaseVersion() <<")";
   cDiv(&ost);
   mDiv(&ost,"ou",outPut_.toString());
   mDiv(&ost,"sh",hasShMem_.toString());
