@@ -482,11 +482,11 @@ bool FUEventProcessor::enabling(toolbox::task::WorkLoop* wl)
   if(nbSubProcesses_.value_==0) return enableClassic();
   //protect manipulation of subprocess array
   pthread_mutex_lock(&start_lock_);
+  pthread_mutex_lock(&pickup_lock_);
   subs_.clear();
   subs_.resize(nbSubProcesses_.value_); // this should not be necessary
   pid_t retval = -1;
 
-  pthread_mutex_lock(&pickup_lock_);
   for(unsigned int i=0; i<nbSubProcesses_.value_; i++)
     {
       subs_[i]=SubProcess(i,retval); //this will replace all the scattered variables
@@ -1089,14 +1089,18 @@ bool FUEventProcessor::supervisor(toolbox::task::WorkLoop *)
   pthread_mutex_lock(&stop_lock_);
   if(subs_.size()!=nbSubProcesses_.value_)
     {
-      subs_.resize(nbSubProcesses_.value_);
-      spMStates_.resize(nbSubProcesses_.value_);
-      spmStates_.resize(nbSubProcesses_.value_);
-      for(unsigned int i = 0; i < spMStates_.size(); i++)
-	{
-	  spMStates_[i] = edm::event_processor::sInit; 
-	  spmStates_[i] = 0; 
-	}
+      pthread_mutex_lock(&pickup_lock_);
+      if(subs_.size()!=nbSubProcesses_.value_) {
+        subs_.resize(nbSubProcesses_.value_);
+        spMStates_.resize(nbSubProcesses_.value_);
+        spmStates_.resize(nbSubProcesses_.value_);
+        for(unsigned int i = 0; i < spMStates_.size(); i++)
+	  {
+	    spMStates_[i] = edm::event_processor::sInit; 
+	    spmStates_[i] = 0; 
+	  }
+      }
+      pthread_mutex_unlock(&pickup_lock_);
     }
   bool running = fsm_.stateName()->toString()=="Enabled";
   bool stopping = fsm_.stateName()->toString()=="stopping";
@@ -1104,25 +1108,29 @@ bool FUEventProcessor::supervisor(toolbox::task::WorkLoop *)
     {
       if(subs_[i].alive()==-1000) continue;
       int sl;
+      pid_t sub_pid = subs_[i].pid();
+      pid_t killedOrNot = waitpid(sub_pid,&sl,WNOHANG);
 
-      pid_t killedOrNot = waitpid(subs_[i].pid(),&sl,WNOHANG);
-
-      if(killedOrNot==subs_[i].pid()) subs_[i].setStatus((WIFEXITED(sl) != 0 ? 0 : -1));
-      else continue;
-      pthread_mutex_lock(&pickup_lock_);
-      std::ostringstream ost;
-      if(subs_[i].alive()==0) ost << " process exited with status " << WEXITSTATUS(sl);
-      else if(WIFSIGNALED(sl)!=0) ost << " process terminated with signal " << WTERMSIG(sl);
-      else ost << " process stopped ";
-      subs_[i].countdown()=slaveRestartDelaySecs_.value_;
-      subs_[i].setReasonForFailed(ost.str());
-      spMStates_[i] = evtProcessor_.notstarted_state_code();
-      spmStates_[i] = 0;
-      std::ostringstream ost1;
-      ost1 << "-E- Slave " << subs_[i].pid() << ost.str();
-      localLog(ost1.str());
-      if(!autoRestartSlaves_.value_) subs_[i].disconnect();
-      pthread_mutex_unlock(&pickup_lock_);
+      if(killedOrNot && killedOrNot==sub_pid) {
+	pthread_mutex_lock(&pickup_lock_);
+	//check if out of range or recreated (enable can clear vector)
+	if (i<subs_.size() && subs_[i].alive()!=-1000) {
+	  subs_[i].setStatus((WIFEXITED(sl) != 0 ? 0 : -1));
+	  std::ostringstream ost;
+	  if(subs_[i].alive()==0) ost << " process exited with status " << WEXITSTATUS(sl);
+	  else if(WIFSIGNALED(sl)!=0) ost << " process terminated with signal " << WTERMSIG(sl);
+	  else ost << " process stopped ";
+	  subs_[i].countdown()=slaveRestartDelaySecs_.value_;
+	  subs_[i].setReasonForFailed(ost.str());
+	  spMStates_[i] = evtProcessor_.notstarted_state_code();
+	  spmStates_[i] = 0;
+	  std::ostringstream ost1;
+	  ost1 << "-E- Slave " << subs_[i].pid() << ost.str();
+	  localLog(ost1.str());
+	  if(!autoRestartSlaves_.value_) subs_[i].disconnect();
+	}
+	pthread_mutex_unlock(&pickup_lock_);
+      }
     }
   pthread_mutex_unlock(&stop_lock_);	
   if(stopping) return true; // if in stopping we are done
@@ -2285,7 +2293,7 @@ void FUEventProcessor::makeStaticInfo()
   using namespace utils;
   std::ostringstream ost;
   mDiv(&ost,"ve");
-  ost<< "$Revision: 1.134.2.4 $ (" << edm::getReleaseVersion() <<")";
+  ost<< "$Revision: 1.134.2.5 $ (" << edm::getReleaseVersion() <<")";
   cDiv(&ost);
   mDiv(&ost,"ou",outPut_.toString());
   mDiv(&ost,"sh",hasShMem_.toString());
