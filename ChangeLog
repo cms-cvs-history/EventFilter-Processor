@@ -1,4 +1,9 @@
-2012-04-27 Srecko morovic <srecko.morovic@cern.ch>
+2012-04-30 Srecko Morovic <srecko.morovic@cern.ch>
+
+	* tag V02-05-02
+	* ShmOutputModuleRegistry moved to Modules
+
+2012-04-27 Srecko Morovic <srecko.morovic@cern.ch>
 
 	* tag V02-05-01
 	* fixing possible invalid write when pid from invalid
