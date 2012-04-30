@@ -4,9 +4,9 @@
 #include "EventFilter/Utilities/interface/ModuleWebRegistry.h"
 #include "EventFilter/Utilities/interface/ServiceWebRegistry.h"
 #include "EventFilter/Utilities/interface/ServiceWeb.h"
-#include "EventFilter/Utilities/interface/ShmOutputModuleRegistry.h"
 #include "EventFilter/Utilities/interface/MicroStateService.h"
 #include "EventFilter/Utilities/interface/TimeProfilerService.h"
+#include "EventFilter/Modules/interface/ShmOutputModuleRegistry.h"
 
 #include "EventFilter/Modules/src/FUShmOutputModule.h"
 
