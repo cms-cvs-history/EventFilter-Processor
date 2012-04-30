@@ -12,7 +12,7 @@
 #include "EventFilter/Utilities/interface/SlaveQueue.h"
 #include "EventFilter/Utilities/interface/ModuleWeb.h"
 #include "EventFilter/Utilities/interface/ModuleWebRegistry.h"
-#include "EventFilter/Utilities/interface/ShmOutputModuleRegistry.h"
+#include "EventFilter/Modules/interface/ShmOutputModuleRegistry.h"
 #include "SubProcess.h"
 #include "FWEPWrapper.h"
 
